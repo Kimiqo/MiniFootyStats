@@ -22,11 +22,11 @@ export default async function handler(req, res) {
     };
     
     // Get all players sorted by different criteria
-    const byGoals = await players.find(filter).sort({ totalGoals: -1 }).limit(10).toArray();
-    const byAssists = await players.find(filter).sort({ totalAssists: -1 }).limit(10).toArray();
-    const bySaves = await players.find(filter).sort({ totalSaves: -1 }).limit(10).toArray();
-    const byMVP = await players.find(filter).sort({ totalMVP: -1 }).limit(10).toArray();
-    const byAppearances = await players.find(filter).sort({ totalAppearances: -1 }).limit(10).toArray();
+    const byGoals = await players.find(filter).sort({ totalGoals: -1 }).toArray();
+    const byAssists = await players.find(filter).sort({ totalAssists: -1 }).toArray();
+    const bySaves = await players.find(filter).sort({ totalSaves: -1 }).toArray();
+    const byMVP = await players.find(filter).sort({ totalMVP: -1 }).toArray();
+    const byAppearances = await players.find(filter).sort({ totalAppearances: -1 }).toArray();
 
     return res.status(200).json({
       goals: byGoals,

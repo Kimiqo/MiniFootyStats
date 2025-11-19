@@ -15,6 +15,10 @@ import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { PlayersManagement } from './pages/admin/PlayersManagement';
 import { CreateMatch } from './pages/admin/CreateMatch';
 import { ManageMatch } from './pages/admin/ManageMatch';
+import TeamRandomizer from './pages/admin/TeamRandomizer';
+
+// Team Page
+import Teams from './pages/Teams';
 
 function App() {
   return (
@@ -29,6 +33,7 @@ function App() {
               <Route path="/group/:groupId" element={<Home />} />
               <Route path="/group/:groupId/leaderboard" element={<Leaderboard />} />
               <Route path="/group/:groupId/vote" element={<Vote />} />
+              <Route path="/group/:groupId/teams" element={<Teams />} />
               
               {/* Legacy redirects - redirect old URLs to group selector */}
               <Route path="/leaderboard" element={<Navigate to="/" replace />} />
@@ -65,6 +70,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ManageMatch />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/teams/:groupId"
+                element={
+                  <ProtectedRoute>
+                    <TeamRandomizer />
                   </ProtectedRoute>
                 }
               />

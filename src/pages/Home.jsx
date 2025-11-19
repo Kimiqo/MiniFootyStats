@@ -3,12 +3,32 @@ import { useRecentMatches, useLeaderboard, useVoteStatus } from '../hooks/useAPI
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Loading, ErrorMessage } from '../components/Feedback';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { getTeams } from '../api/api';
 
 export const Home = () => {
   const { groupId } = useParams();
   const { data: matches, isLoading: matchesLoading, error: matchesError } = useRecentMatches(groupId);
   const { data: leaderboard, isLoading: leaderboardLoading, error: leaderboardError } = useLeaderboard(groupId);
   const { data: voteStatus, isLoading: voteLoading } = useVoteStatus(groupId);
+  const [teams, setTeams] = useState(null);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        setTeamsLoading(true);
+        const data = await getTeams(groupId);
+        setTeams(data);
+      } catch (err) {
+        console.error('Error fetching teams:', err);
+      } finally {
+        setTeamsLoading(false);
+      }
+    };
+
+    fetchTeams();
+  }, [groupId]);
 
   if (matchesLoading || leaderboardLoading) {
     return <Loading />;
@@ -185,6 +205,52 @@ export const Home = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Current Teams */}
+      {!teamsLoading && teams && teams.teams && teams.teams.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl">🎲 Current Teams</CardTitle>
+              <Link to={`/group/${groupId}/teams`} className="text-sm text-blue-600 hover:text-blue-800 font-semibold">
+                View Full Teams →
+              </Link>
+            </div>
+            <p className="text-sm text-gray-500 mt-1">
+              Created on {new Date(teams.createdAt).toLocaleDateString()}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {teams.teams.map((team, index) => {
+                // Handle both old structure (object with players array) and new structure (direct array)
+                const players = Array.isArray(team) ? team : team.players || [];
+                const teamNum = Array.isArray(team) ? index + 1 : team.teamNumber || index + 1;
+                
+                return (
+                  <div key={index} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                    <h3 className="font-bold text-sm text-gray-900 mb-2 text-center border-b pb-1">
+                      Team {teamNum}
+                    </h3>
+                    <div className="space-y-1">
+                      {players.slice(0, 3).map((player) => (
+                        <div key={player._id} className="text-xs text-gray-700 truncate">
+                          • {player.name}
+                        </div>
+                      ))}
+                      {players.length > 3 && (
+                        <div className="text-xs text-gray-500 italic">
+                          +{players.length - 3} more
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Matches */}
       {matches && matches.length > 1 && (

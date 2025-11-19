@@ -43,6 +43,7 @@ export const getPlayers = (groupId) => apiFetch(`/players?groupId=${groupId}`, {
 export const getLeaderboard = (groupId) => apiFetch(`/leaderboard?groupId=${groupId}`, { skipAuth: true });
 export const getRecentMatches = (groupId) => apiFetch(`/matches/recent?groupId=${groupId}`, { skipAuth: true });
 export const getVoteStatus = (groupId) => apiFetch(`/vote-status?groupId=${groupId}`, { skipAuth: true });
+export const getTeams = (groupId) => apiFetch(`/teams?groupId=${groupId}`, { skipAuth: true });
 export const submitVote = (data) => apiFetch('/vote', {
   method: 'POST',
   body: JSON.stringify(data),
@@ -89,6 +90,16 @@ export const updateAttendance = (data) => apiFetch('/admin/match/attendance', {
 export const deleteMatch = ({ matchId, password }) => apiFetch('/admin/match/delete', {
   method: 'DELETE',
   body: JSON.stringify({ matchId, password }),
+});
+
+export const createTeams = ({ playerIds, numTeams }) => apiFetch('/admin/teams/create', {
+  method: 'POST',
+  body: JSON.stringify({ playerIds, numTeams }),
+});
+
+export const deleteTeams = (teamId) => apiFetch('/admin/teams/delete', {
+  method: 'DELETE',
+  body: JSON.stringify({ teamId }),
 });
 
 export const updateStats = (data) => apiFetch('/admin/stats/update', {

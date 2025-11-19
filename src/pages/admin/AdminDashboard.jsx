@@ -101,7 +101,7 @@ export const AdminDashboard = () => {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-4 gap-4">
             <Link to="/admin/match/create">
               <Button variant="primary" className="w-full">
                 ➕ Create Match
@@ -110,6 +110,11 @@ export const AdminDashboard = () => {
             <Link to="/admin/players">
               <Button variant="secondary" className="w-full">
                 👥 Manage Players
+              </Button>
+            </Link>
+            <Link to={`/admin/teams/${groupId}`}>
+              <Button variant="secondary" className="w-full">
+                🎲 Team Randomizer
               </Button>
             </Link>
             {latestMatch && !latestMatch.votingClosed && (

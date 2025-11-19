@@ -30,12 +30,16 @@ import deleteMatchHandler from './routes/admin/match/delete.js';
 import updateStatsHandler from './routes/admin/stats/update.js';
 import startVotingHandler from './routes/admin/voting/start.js';
 import closeVotingHandler from './routes/admin/voting/close.js';
+import createTeamsHandler from './routes/admin/teams/create.js';
+import deleteTeamsHandler from './routes/admin/teams/delete.js';
+import teamsHandler from './routes/teams.js';
 
 // Public routes
 app.all('/api/groups', groupsHandler);
 app.all('/api/groups/join', joinGroupHandler);
 app.all('/api/players', playersHandler);
 app.all('/api/leaderboard', leaderboardHandler);
+app.all('/api/teams', teamsHandler);
 app.all('/api/matches/recent', recentMatchesHandler);
 app.all('/api/vote', voteHandler);
 app.all('/api/vote-status', voteStatusHandler);
@@ -52,6 +56,8 @@ app.all('/api/admin/match/delete', deleteMatchHandler);
 app.all('/api/admin/stats/update', updateStatsHandler);
 app.all('/api/admin/voting/start', startVotingHandler);
 app.all('/api/admin/voting/close', closeVotingHandler);
+app.all('/api/admin/teams/create', createTeamsHandler);
+app.all('/api/admin/teams/delete', deleteTeamsHandler);
 
 // For Vercel serverless deployment, export the app
 export default app;
