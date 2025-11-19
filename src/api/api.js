@@ -13,19 +13,15 @@ async function apiFetch(endpoint, options = {}) {
   }
 
   const url = `${API_BASE_URL}${endpoint}`;
-  console.log('API Request:', options.method || 'GET', url);
 
   const response = await fetch(url, {
     ...options,
     headers,
   });
 
-  console.log('API Response:', response.status, response.statusText);
-
   const data = await response.json();
 
   if (!response.ok) {
-    console.error('API Error:', data);
     throw new Error(data.error || 'API request failed');
   }
 

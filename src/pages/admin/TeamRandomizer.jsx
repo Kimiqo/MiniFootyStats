@@ -63,7 +63,6 @@ export default function TeamRandomizer() {
         playerIds: selectedPlayers,
         numTeams: parseInt(numTeams)
       });
-      console.log('Teams created:', result);
       setTeams(result);
       setSelectedPlayers([]);
     } catch (err) {
@@ -106,7 +105,7 @@ export default function TeamRandomizer() {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Team Randomizer</h1>
           <button
-            onClick={() => navigate(`/admin/dashboard/${groupId}`)}
+            onClick={() => navigate(`/admin`)}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
           >
             Back to Dashboard
