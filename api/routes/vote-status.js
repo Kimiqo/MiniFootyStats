@@ -36,19 +36,19 @@ async function voteStatusHandler(req, res) {
       });
     }
 
-    // Get all votes for this match (handle both string and ObjectId formats)
+    // Get all votes for this match (handle both string and ObjectId formats for matchId)
     const matchVotes = await votes.find({ 
-      matchId: activeMatch._id,
       $or: [
-        { groupId: groupId },
-        { groupId: new ObjectId(groupId) }
-      ]
+        { matchId: activeMatch._id.toString() },
+        { matchId: activeMatch._id }
+      ],
+      groupId: groupId
     }).toArray();
 
     // Count votes per player
     const voteCounts = {};
     matchVotes.forEach(vote => {
-      const playerId = vote.playerId.toString();
+      const playerId = vote.playerVotedForId.toString();
       voteCounts[playerId] = (voteCounts[playerId] || 0) + 1;
     });
 

@@ -80,16 +80,6 @@ export const Home = () => {
                   </span>
                 </div>
               )}
-              {latestMatch.votingOpen && !latestMatch.votingClosed && (
-                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-green-800 font-semibold mb-2">🗳️ Voting is now open!</p>
-                  <Link to={`/group/${groupId}/vote`}>
-                    <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
-                      Cast Your Vote
-                    </button>
-                  </Link>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
@@ -148,6 +138,58 @@ export const Home = () => {
                   Cast Your Vote Now
                 </button>
               </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Detailed Vote Standings */}
+      {!voteLoading && voteStatus?.votingActive && voteStatus.totalVotes > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">📊 Current Vote Standings</CardTitle>
+            <p className="text-sm text-gray-500 mt-1">
+              {voteStatus.totalVotes} vote{voteStatus.totalVotes !== 1 ? 's' : ''} cast so far
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {voteStatus.leaderboard?.map((candidate, index) => (
+                <div 
+                  key={candidate._id} 
+                  className={`flex justify-between items-center p-4 rounded-lg transition ${
+                    index === 0 ? 'bg-yellow-50 border-2 border-yellow-300' : 'bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <span className={`font-bold text-lg w-6 ${
+                      index === 0 ? 'text-yellow-600' :
+                      index === 1 ? 'text-gray-400' :
+                      index === 2 ? 'text-orange-600' :
+                      'text-gray-500'
+                    }`}>
+                      {index + 1}
+                    </span>
+                    {index === 0 && <span className="text-2xl">👑</span>}
+                    <span className="font-semibold text-gray-900">{candidate.name}</span>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-32 bg-gray-200 rounded-full h-3 hidden sm:block">
+                      <div 
+                        className={`h-3 rounded-full ${
+                          index === 0 ? 'bg-yellow-500' : 'bg-blue-500'
+                        }`}
+                        style={{ 
+                          width: `${(candidate.votes / voteStatus.totalVotes) * 100}%` 
+                        }}
+                      />
+                    </div>
+                    <span className="font-bold text-gray-900 text-lg w-12 text-right">
+                      {candidate.votes}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

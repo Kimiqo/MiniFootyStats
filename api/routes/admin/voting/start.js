@@ -8,10 +8,14 @@ async function startVotingHandler(req, res) {
   }
 
   try {
-    const { matchId } = req.body;
+    const { matchId, candidates } = req.body;
 
     if (!matchId) {
       return res.status(400).json({ error: 'Match ID is required' });
+    }
+
+    if (!candidates || !Array.isArray(candidates) || candidates.length === 0) {
+      return res.status(400).json({ error: 'At least one candidate is required' });
     }
 
     const matches = await getCollection('matches');
@@ -28,9 +32,13 @@ async function startVotingHandler(req, res) {
       return res.status(400).json({ error: 'Voting has already been closed for this match' });
     }
 
+    if (match.ended) {
+      return res.status(400).json({ error: 'Cannot start voting - match has ended' });
+    }
+
     await matches.updateOne(
       { _id: new ObjectId(matchId) },
-      { $set: { votingOpen: true } }
+      { $set: { votingOpen: true, mvpCandidates: candidates } }
     );
 
     return res.status(200).json({ message: 'Voting started successfully' });

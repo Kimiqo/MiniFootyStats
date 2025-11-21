@@ -114,3 +114,7 @@ export const useStartVoting = () => {
 export const useCloseVoting = () => {
   return useMutation(api.closeVoting);
 };
+
+export const useEndMatch = () => {
+  return useMutation(api.endMatch);
+};

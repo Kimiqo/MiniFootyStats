@@ -51,6 +51,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Player was not an attendee of this match' });
     }
 
+    // Check if player is in the list of candidates (if candidates were specified)
+    if (match.mvpCandidates && match.mvpCandidates.length > 0) {
+      if (!match.mvpCandidates.includes(playerId)) {
+        return res.status(400).json({ error: 'Player is not eligible for MVP voting' });
+      }
+    }
+
     // Create vote
     const vote = {
       matchId,

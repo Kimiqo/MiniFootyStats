@@ -116,34 +116,40 @@ export const Vote = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-4">
-                Select Player
+                Select MVP Candidate
               </label>
               <div className="grid md:grid-cols-2 gap-4">
-                {activeMatch.attendeesDetails?.map((player) => (
-                  <div
-                    key={player._id}
-                    onClick={() => setSelectedPlayer(player._id)}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition ${
-                      selectedPlayer === player._id
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-400'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0">
-                        <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
-                          {player.name.charAt(0).toUpperCase()}
+                {activeMatch.attendeesDetails
+                  ?.filter(player => 
+                    !activeMatch.mvpCandidates || 
+                    activeMatch.mvpCandidates.length === 0 || 
+                    activeMatch.mvpCandidates.includes(player._id)
+                  )
+                  .map((player) => (
+                    <div
+                      key={player._id}
+                      onClick={() => setSelectedPlayer(player._id)}
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition ${
+                        selectedPlayer === player._id
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-200 hover:border-blue-400'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-shrink-0">
+                          <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
+                            {player.name.charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-800">{player.name}</p>
+                          <p className="text-sm text-gray-500">
+                            ⚽ {player.totalGoals} • 🏆 {player.totalMVP}
+                          </p>
                         </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-800">{player.name}</p>
-                        <p className="text-sm text-gray-500">
-                          ⚽ {player.totalGoals} • 🏆 {player.totalMVP}
-                        </p>
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
 

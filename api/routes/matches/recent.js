@@ -35,14 +35,20 @@ export default async function handler(req, res) {
         const attendeeIds = match.attendees.map(id => new ObjectId(id));
         const attendeePlayers = await players.find({ 
           _id: { $in: attendeeIds },
-          groupId
+          $or: [
+            { groupId: groupId },
+            { groupId: new ObjectId(groupId) }
+          ]
         }).toArray();
         
         let mvpPlayer = null;
         if (match.mvpWinnerId) {
           mvpPlayer = await players.findOne({ 
             _id: new ObjectId(match.mvpWinnerId),
-            groupId
+            $or: [
+              { groupId: groupId },
+              { groupId: new ObjectId(groupId) }
+            ]
           });
         }
 

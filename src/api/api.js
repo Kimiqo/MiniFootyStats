@@ -88,6 +88,11 @@ export const deleteMatch = ({ matchId, password }) => apiFetch('/admin/match/del
   body: JSON.stringify({ matchId, password }),
 });
 
+export const endMatch = (matchId) => apiFetch('/admin/match/end', {
+  method: 'POST',
+  body: JSON.stringify({ matchId }),
+});
+
 export const createTeams = ({ playerIds, numTeams }) => apiFetch('/admin/teams/create', {
   method: 'POST',
   body: JSON.stringify({ playerIds, numTeams }),

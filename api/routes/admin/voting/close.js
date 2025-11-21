@@ -26,6 +26,10 @@ async function closeVotingHandler(req, res) {
       return res.status(404).json({ error: 'Match not found or access denied' });
     }
 
+    if (match.ended) {
+      return res.status(400).json({ error: 'Cannot close voting - match has ended' });
+    }
+
     if (match.votingClosed) {
       return res.status(400).json({ error: 'Voting has already been closed' });
     }
