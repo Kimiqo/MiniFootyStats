@@ -65,40 +65,24 @@ async function deleteMatchHandler(req, res) {
       );
     }
 
-    // If match had stats, reverse them from players
-    if (match.stats && match.attendees && match.attendees.length > 0) {
+    // Only reverse stats and attendance if they were actually saved (match has attendees)
+    if (match.attendees && match.attendees.length > 0) {
       for (const playerId of match.attendees) {
         const playerIdStr = playerId.toString();
-        const goals = match.stats.goals?.[playerIdStr] || 0;
-        const assists = match.stats.assists?.[playerIdStr] || 0;
-        const saves = match.stats.saves?.[playerIdStr] || 0;
+        const goals = match.stats?.goals?.[playerIdStr] || 0;
+        const assists = match.stats?.assists?.[playerIdStr] || 0;
+        const saves = match.stats?.saves?.[playerIdStr] || 0;
 
-        if (goals > 0 || assists > 0 || saves > 0) {
-          await players.updateOne(
-            { _id: playerId },
-            {
-              $inc: {
-                totalGoals: -goals,
-                totalAssists: -assists,
-                totalSaves: -saves,
-                totalAppearances: -1
-              }
-            }
-          );
-        } else {
-          // Just decrement appearances if no stats
-          await players.updateOne(
-            { _id: playerId },
-            { $inc: { totalAppearances: -1 } }
-          );
-        }
-      }
-    } else if (match.attendees && match.attendees.length > 0) {
-      // If no stats but had attendees, just decrement appearances
-      for (const playerId of match.attendees) {
+        // Build the decrement object
+        const decrements = { totalAppearances: -1 };
+        
+        if (goals > 0) decrements.totalGoals = -goals;
+        if (assists > 0) decrements.totalAssists = -assists;
+        if (saves > 0) decrements.totalSaves = -saves;
+
         await players.updateOne(
           { _id: playerId },
-          { $inc: { totalAppearances: -1 } }
+          { $inc: decrements }
         );
       }
     }
