@@ -10,6 +10,8 @@ import {
   useCloseVoting,
   useDeleteMatch,
   useEndMatch,
+  useUpdateMatch,
+  useUploadMatchMedia,
 } from '../../hooks/useAPI';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/Card';
 import { Button } from '../../components/Button';
@@ -33,22 +35,31 @@ export const ManageMatch = () => {
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [stats, setStats] = useState({ goals: {}, assists: {}, saves: {} });
   const [message, setMessage] = useState({ type: '', text: '' });
+  const updateMatch = useUpdateMatch();
+  const uploadMedia = useUploadMatchMedia();
+  const [matchGoalInput, setMatchGoalInput] = useState('');
+  const [videoUrlInput, setVideoUrlInput] = useState('');
+  const [videoFile, setVideoFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState('');
+  const [selectedMatchIndex, setSelectedMatchIndex] = useState(0);
 
-  const latestMatch = matches?.[0];
+  const selectedMatch = matches?.[selectedMatchIndex] || matches?.[0];
 
   useEffect(() => {
-    if (latestMatch) {
-      setSelectedAttendees(latestMatch.attendees || []);
-      setSelectedCandidates(latestMatch.mvpCandidates || []);
-      setStats(latestMatch.stats || { goals: {}, assists: {}, saves: {} });
+    if (selectedMatch) {
+      setSelectedAttendees(selectedMatch.attendees || []);
+      setSelectedCandidates(selectedMatch.mvpCandidates || []);
+      setStats(selectedMatch.stats || { goals: {}, assists: {}, saves: {} });
+      setMatchGoalInput(selectedMatch.matchGoal || '');
+      setVideoUrlInput(selectedMatch.videoUrl || '');
     }
-  }, [latestMatch]);
+  }, [selectedMatch]);
 
   if (matchesLoading || playersLoading) {
     return <Loading />;
   }
 
-  if (!latestMatch) {
+  if (!matches || matches.length === 0) {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold text-gray-800">Manage Match</h1>
@@ -69,7 +80,7 @@ export const ManageMatch = () => {
     setMessage({ type: '', text: '' });
     try {
       await updateAttendance.mutate({
-        matchId: latestMatch._id,
+        matchId: selectedMatch._id,
         attendeeIds: selectedAttendees,
       });
       setMessage({ type: 'success', text: 'Attendance updated successfully!' });
@@ -93,7 +104,7 @@ export const ManageMatch = () => {
     setMessage({ type: '', text: '' });
     try {
       await updateStats.mutate({
-        matchId: latestMatch._id,
+        matchId: selectedMatch._id,
         stats,
       });
       setMessage({ type: 'success', text: 'Stats updated successfully!' });
@@ -119,7 +130,7 @@ export const ManageMatch = () => {
     
     setMessage({ type: '', text: '' });
     try {
-      await startVoting.mutate({ matchId: latestMatch._id, candidates: selectedCandidates });
+      await startVoting.mutate({ matchId: selectedMatch._id, candidates: selectedCandidates });
       setMessage({ type: 'success', text: 'Voting started successfully!' });
       refetchMatches();
     } catch (err) {
@@ -133,7 +144,7 @@ export const ManageMatch = () => {
       return;
     }
     try {
-      const result = await closeVoting.mutate({ matchId: latestMatch._id });
+      const result = await closeVoting.mutate({ matchId: selectedMatch._id });
       setMessage({ 
         type: 'success', 
         text: `Voting closed! Winner: ${result.winnerId}. Total votes: ${result.totalVotes}` 
@@ -151,7 +162,7 @@ export const ManageMatch = () => {
     
     setMessage({ type: '', text: '' });
     try {
-      await endMatch.mutate(latestMatch._id);
+      await endMatch.mutate(selectedMatch._id);
       setMessage({ type: 'success', text: 'Match ended successfully! All data has been finalized.' });
       refetchMatches();
     } catch (err) {
@@ -172,7 +183,7 @@ export const ManageMatch = () => {
     setMessage({ type: '', text: '' });
     
     try {
-      await deleteMatch.mutate({ matchId: latestMatch._id, password });
+      await deleteMatch.mutate({ matchId: selectedMatch._id, password });
       
       // Immediately navigate away - don't wait for message
       navigate('/admin', { 
@@ -183,8 +194,76 @@ export const ManageMatch = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file size (limit to 50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        setMessage({ type: 'error', text: 'File size must be less than 50MB' });
+        return;
+      }
+      setVideoFile(file);
+      setVideoUrlInput(''); // Clear URL if file is selected
+    }
+  };
+
+  const handleUploadFile = async () => {
+    if (!videoFile) {
+      setMessage({ type: 'error', text: 'Please select a file to upload' });
+      return;
+    }
+
+    setMessage({ type: '', text: '' });
+    setUploadProgress('Reading file...');
+
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          setUploadProgress('Uploading...');
+          const base64Data = e.target?.result;
+          
+          await uploadMedia.mutate({
+            matchId: selectedMatch._id,
+            fileData: base64Data,
+            fileName: videoFile.name,
+            fileType: videoFile.type,
+          });
+
+          setMessage({ type: 'success', text: 'Video uploaded successfully!' });
+          setUploadProgress('');
+          setVideoFile(null);
+          refetchMatches();
+        } catch (err) {
+          setMessage({ type: 'error', text: err.message || 'Failed to upload video' });
+          setUploadProgress('');
+        }
+      };
+      reader.onerror = () => {
+        setMessage({ type: 'error', text: 'Failed to read file' });
+        setUploadProgress('');
+      };
+      reader.readAsDataURL(videoFile);
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message || 'Failed to process video' });
+      setUploadProgress('');
+    }
+  };
+
+  const handleUpdateMatchMeta = async () => {
+    setMessage({ type: '', text: '' });
+    try {
+      await updateMatch.mutate({ matchId: selectedMatch._id, matchGoal: matchGoalInput || null, videoUrl: videoUrlInput || null });
+      setMessage({ type: 'success', text: 'Match details updated successfully!' });
+      refetchMatches();
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message || 'Failed to update match details' });
+    }
+  };
+
   const attendees = players?.filter((p) => selectedAttendees.includes(p._id)) || [];
-  const isMatchEnded = latestMatch?.ended;
+  const isMatchEnded = selectedMatch?.ended;
 
   return (
     <div className="space-y-6">
@@ -200,14 +279,14 @@ export const ManageMatch = () => {
         </div>
         <div className="flex items-center space-x-3">
           <div className="text-sm text-gray-600">
-            {new Date(latestMatch.date).toLocaleDateString('en-US', {
+            {new Date(selectedMatch.date).toLocaleDateString('en-US', {
               weekday: 'long',
               month: 'long',
               day: 'numeric',
               year: 'numeric',
             })}
           </div>
-          {!isMatchEnded && latestMatch.votingClosed && (
+          {!isMatchEnded && selectedMatch.votingClosed && (
             <button
               onClick={handleEndMatch}
               disabled={endMatch.isPending}
@@ -241,6 +320,35 @@ export const ManageMatch = () => {
         )
       )}
 
+      {/* Match Selector */}
+      {matches && matches.length > 1 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Match to Manage</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <select
+              value={selectedMatchIndex}
+              onChange={(e) => setSelectedMatchIndex(parseInt(e.target.value))}
+              className="w-full border rounded-md px-3 py-2 text-base"
+            >
+              {matches.map((match, index) => (
+                <option key={match._id} value={index}>
+                  {new Date(match.date).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                  {match.ended ? ' (Ended)' : match.votingClosed ? ' (Voting Closed)' : match.votingOpen ? ' (Voting Open)' : ''}
+                  {index === 0 ? ' - Latest' : ''}
+                </option>
+              ))}
+            </select>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Match Status */}
       <Card>
         <CardHeader>
@@ -254,16 +362,89 @@ export const ManageMatch = () => {
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <div className="text-2xl font-bold text-green-600">
-                {latestMatch.votingOpen && !latestMatch.votingClosed ? '🟢 Open' : 
-                 latestMatch.votingClosed ? '✅ Closed' : '⏸️ Not Started'}
+                {selectedMatch.votingOpen && !selectedMatch.votingClosed ? '🟢 Open' : 
+                 selectedMatch.votingClosed ? '✅ Closed' : '⏸️ Not Started'}
               </div>
               <div className="text-sm text-gray-600">Voting Status</div>
             </div>
             <div className="text-center p-4 bg-yellow-50 rounded-lg">
               <div className="text-2xl font-bold text-yellow-600">
-                {latestMatch.mvpWinner ? '🏆 ' + latestMatch.mvpWinner.name : 'TBD'}
+                {selectedMatch.mvpWinner ? '🏆 ' + selectedMatch.mvpWinner.name : 'TBD'}
               </div>
               <div className="text-sm text-gray-600">MVP Winner</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Match Details: goal + video */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Match Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700">Match Goal (optional)</label>
+              <input
+                type="text"
+                value={matchGoalInput}
+                onChange={(e) => setMatchGoalInput(e.target.value)}
+                className="mt-2 w-full border rounded-md px-3 py-2"
+                disabled={isMatchEnded}
+                placeholder="e.g. 'Bring the energy — target 5 goals this week'"
+              />
+            </div>
+
+            <div className="border-t pt-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Upload Video File</label>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleFileChange}
+                  disabled={isMatchEnded}
+                  className="text-sm"
+                />
+                {videoFile && (
+                  <span className="text-sm text-gray-600">
+                    {videoFile.name} ({(videoFile.size / (1024 * 1024)).toFixed(2)} MB)
+                  </span>
+                )}
+              </div>
+              {uploadProgress && (
+                <p className="text-sm text-blue-600 mt-2">{uploadProgress}</p>
+              )}
+              {videoFile && (
+                <Button 
+                  onClick={handleUploadFile} 
+                  disabled={uploadMedia.isPending || isMatchEnded}
+                  className="mt-3"
+                >
+                  {uploadMedia.isPending ? 'Uploading...' : 'Upload Video'}
+                </Button>
+              )}
+              <p className="text-xs text-gray-500 mt-2">Max file size: 50MB. Uploaded videos replace any URL.</p>
+            </div>
+
+            <div className="border-t pt-4">
+              <label className="block text-sm font-semibold text-gray-700">Or paste Video URL (optional)</label>
+              <input
+                type="text"
+                value={videoUrlInput}
+                onChange={(e) => setVideoUrlInput(e.target.value)}
+                className="mt-2 w-full border rounded-md px-3 py-2"
+                disabled={isMatchEnded}
+                placeholder="Paste Google Drive, YouTube, or direct video URL"
+              />
+              <p className="text-xs text-gray-500 mt-1">Supports: Google Drive share links, YouTube, or direct video URLs. Users will see this on the home page until replaced.</p>
+              <p className="text-xs text-blue-600 mt-1">💡 For Google Drive: Share the video → Copy link → Paste here (make sure link sharing is enabled)</p>
+            </div>
+
+            <div className="flex space-x-3">
+              <Button onClick={handleUpdateMatchMeta} disabled={updateMatch.isPending || isMatchEnded}>
+                {updateMatch.isPending ? 'Saving...' : 'Save URL & Goal'}
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -383,7 +564,7 @@ export const ManageMatch = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {!latestMatch.votingOpen && !latestMatch.votingClosed && !isMatchEnded && (
+              {!selectedMatch.votingOpen && !selectedMatch.votingClosed && !isMatchEnded && (
                 <>
                   <div className="mb-4">
                     <p className="text-sm font-semibold text-gray-700 mb-3">
@@ -421,7 +602,7 @@ export const ManageMatch = () => {
                 </>
               )}
               
-              {latestMatch.votingOpen && !latestMatch.votingClosed && !isMatchEnded && (
+              {selectedMatch.votingOpen && !selectedMatch.votingClosed && !isMatchEnded && (
                 <>
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-green-800 font-semibold">
@@ -439,11 +620,11 @@ export const ManageMatch = () => {
                 </>
               )}
               
-              {(latestMatch.votingClosed || isMatchEnded) && (
+              {(selectedMatch.votingClosed || isMatchEnded) && (
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                   <p className="text-gray-800 font-semibold">
                     ✅ Voting has been closed. 
-                    {latestMatch.mvpWinner && ` Winner: ${latestMatch.mvpWinner.name}`}
+                    {selectedMatch.mvpWinner && ` Winner: ${selectedMatch.mvpWinner.name}`}
                   </p>
                 </div>
               )}

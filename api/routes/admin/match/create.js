@@ -7,7 +7,7 @@ async function createMatchHandler(req, res) {
   }
 
   try {
-    const { date } = req.body;
+    const { date, matchGoal, videoUrl } = req.body;
 
     if (!date) {
       return res.status(400).json({ error: 'Date is required' });
@@ -27,6 +27,9 @@ async function createMatchHandler(req, res) {
       mvpWinnerId: null,
       votingOpen: false,
       votingClosed: false,
+      // optional fields
+      matchGoal: matchGoal || null,
+      videoUrl: videoUrl || null,
       createdAt: new Date()
     };
 

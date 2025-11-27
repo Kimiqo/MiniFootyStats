@@ -78,6 +78,16 @@ export const createMatch = (matchData) => apiFetch('/admin/match/create', {
   body: JSON.stringify(matchData),
 });
 
+export const updateMatch = (data) => apiFetch('/admin/match/update', {
+  method: 'POST',
+  body: JSON.stringify(data),
+});
+
+export const uploadMatchMedia = (data) => apiFetch('/admin/match/upload', {
+  method: 'POST',
+  body: JSON.stringify(data),
+});
+
 export const updateAttendance = (data) => apiFetch('/admin/match/attendance', {
   method: 'POST',
   body: JSON.stringify(data),

@@ -103,6 +103,14 @@ export const useDeleteMatch = () => {
   return useMutation(api.deleteMatch);
 };
 
+export const useUpdateMatch = () => {
+  return useMutation(api.updateMatch);
+};
+
+export const useUploadMatchMedia = () => {
+  return useMutation(api.uploadMatchMedia);
+};
+
 export const useUpdateStats = () => {
   return useMutation(api.updateStats);
 };

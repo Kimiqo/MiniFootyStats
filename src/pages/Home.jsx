@@ -80,6 +80,61 @@ export const Home = () => {
                   </span>
                 </div>
               )}
+              {latestMatch.matchGoal && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Match Goal:</span>
+                  <span className="font-semibold text-gray-800">{latestMatch.matchGoal}</span>
+                </div>
+              )}
+              {(latestMatch.videoData || latestMatch.videoUrl) && (
+                <div className="mt-4">
+                  {/* Show uploaded video if available, otherwise URL */}
+                  {latestMatch.videoData ? (
+                    <video controls className="w-full rounded-md h-64 bg-black">
+                      <source src={latestMatch.videoData.data} type={latestMatch.videoData.fileType} />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : latestMatch.videoUrl && (latestMatch.videoUrl.includes('drive.google.com')) ? (
+                    <div className="aspect-w-16 aspect-h-9">
+                      <iframe
+                        title="match-video"
+                        src={(() => {
+                          // Convert Google Drive links to embed format
+                          // Format: https://drive.google.com/file/d/FILE_ID/view -> https://drive.google.com/file/d/FILE_ID/preview
+                          const url = latestMatch.videoUrl;
+                          if (url.includes('/view')) {
+                            return url.replace('/view', '/preview');
+                          } else if (url.includes('/d/')) {
+                            const fileId = url.match(/\/d\/([^\/]+)/)?.[1];
+                            return `https://drive.google.com/file/d/${fileId}/preview`;
+                          }
+                          return url;
+                        })()}
+                        frameBorder="0"
+                        allow="autoplay"
+                        allowFullScreen
+                        className="w-full h-64 rounded-md"
+                      />
+                    </div>
+                  ) : latestMatch.videoUrl && (latestMatch.videoUrl.includes('youtube') || latestMatch.videoUrl.includes('youtu.be')) ? (
+                    <div className="aspect-w-16 aspect-h-9">
+                      <iframe
+                        title="match-video"
+                        src={latestMatch.videoUrl.includes('embed') ? latestMatch.videoUrl : latestMatch.videoUrl.replace('watch?v=', 'embed/')}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-64 rounded-md"
+                      />
+                    </div>
+                  ) : latestMatch.videoUrl ? (
+                    <video controls className="w-full rounded-md h-64 bg-black">
+                      <source src={latestMatch.videoUrl} />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : null}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
