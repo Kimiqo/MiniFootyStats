@@ -14,8 +14,9 @@ export const Navbar = () => {
     <nav className="bg-blue-600 text-white shadow-lg">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          <Link to={groupId ? `/group/${groupId}` : '/'} className="text-xl font-bold">
-            ⚽ {group?.name || 'MiniFooty'}
+          <Link to={groupId ? `/group/${groupId}` : '/'} className="flex items-center space-x-2">
+            <img src="/minifooty_logo.png" alt="MiniFooty Logo" className="h-10 w-auto" />
+            <span className="text-xl font-bold">{group?.name || ''}</span>
           </Link>
 
           {/* Hamburger Button */}
